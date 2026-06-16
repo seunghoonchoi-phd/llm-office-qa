@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+title: "llm-office-qa: objective-defect linters for LLM-generated Office files"
+message: "If you use this software, please cite it using these metadata."
+type: software
+authors:
+  - family-names: Choi
+    given-names: Seunghoon
+    # orcid: "https://orcid.org/0000-0000-0000-0000"   # add your ORCID
+repository-code: "https://github.com/seunghoonchoi-phd/llm-office-qa"
+abstract: >-
+  Deterministic linters and a QA philosophy for catching only the objective,
+  unambiguous mistakes in LLM-generated PowerPoint, Excel, and Word files —
+  designed never to constrain a more capable model's stylistic ceiling.
+keywords:
+  - large-language-models
+  - quality-assurance
+  - linter
+  - python-pptx
+  - openpyxl
+  - python-docx
+license: MIT
+version: "0.1.0"
+date-released: "2026-06-16"

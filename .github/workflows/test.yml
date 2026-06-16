@@ -1,0 +1,44 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint-fixtures:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: pip install python-pptx openpyxl python-docx Pillow
+
+      - name: Build deliberately-flawed fixtures
+        run: |
+          python examples/make_test_deck.py flawed.pptx
+          python examples/make_test_book.py flawed.xlsx
+          python examples/make_test_doc.py  flawed.docx
+
+      - name: Each linter must flag the flawed fixture (exit 1)
+        run: |
+          for cmd in "pptx_lint.py flawed.pptx" "xlsx_lint.py flawed.xlsx" "docx_lint.py flawed.docx"; do
+            set +e
+            python $cmd
+            code=$?
+            set -e
+            if [ "$code" -ne 1 ]; then
+              echo "::error::python $cmd exited $code, expected 1 (objective defects)"
+              exit 1
+            fi
+            echo "OK: python $cmd correctly exited 1"
+          done

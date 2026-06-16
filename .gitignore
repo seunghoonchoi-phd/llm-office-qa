@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# generated test fixtures (built on demand by examples/make_test_*.py)
+_test_flawed_deck.pptx
+_test_flawed_book.xlsx
+_test_flawed_doc.docx
+_sample_*.png
+
+# render output + lint reports
+_render/
+*.report.json
+r.json
