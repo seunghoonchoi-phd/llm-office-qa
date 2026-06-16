@@ -5,7 +5,8 @@ type: software
 authors:
   - family-names: Choi
     given-names: Seunghoon
-    # orcid: "https://orcid.org/0000-0000-0000-0000"   # add your ORCID
+    orcid: "https://orcid.org/0009-0007-8324-2943"
+doi: "10.5281/zenodo.20716257"
 repository-code: "https://github.com/seunghoonchoi-phd/llm-office-qa"
 abstract: >-
   Deterministic linters and a QA philosophy for catching only the objective,

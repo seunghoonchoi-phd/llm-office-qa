@@ -2,6 +2,7 @@
 
 [![tests](https://github.com/seunghoonchoi-phd/llm-office-qa/actions/workflows/test.yml/badge.svg)](https://github.com/seunghoonchoi-phd/llm-office-qa/actions/workflows/test.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![DOI](https://zenodo.org/badge/1271079447.svg)](https://zenodo.org/badge/latestdoi/1271079447)
 
 **Catch an LLM's _objective_ mistakes in PowerPoint, Excel, and Word — without lobotomizing the model.**
 
