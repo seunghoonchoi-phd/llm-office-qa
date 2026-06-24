@@ -1,13 +1,13 @@
 """
-xlsx_lint.py — OBJECTIVE-DEFECT linter for .xlsx workbooks.
+check_excel.py — objective-defect checker for .xlsx workbooks.
 
-Same scope philosophy as pptx_lint.py: flag ONLY objective, unambiguous mistakes
+Same scope philosophy as Office File Inspector: flag ONLY objective, unambiguous mistakes
 that a strictly MORE capable model would also never want. Two tests per check:
   (1) OBJECTIVE  — wrong regardless of taste/intent.
   (2) NO-SHACKLE — a smarter model would still always avoid it.
 
 DELIBERATELY NOT CHECKED (these need the user's ORIGINAL as a baseline, so they are
-PROCESS-discipline, not lintable from the file alone — see GUIDELINE.md C1/C3):
+PROCESS-discipline, not checkable from the file alone — see docs/quality-philosophy.md:
   "Claude added a cell color that breaks our internal convention" — a color is not
   objectively wrong; it's non-conformance to a baseline we cannot see here. Also out:
   palette/font/number-format taste, column-width aesthetics, density.
@@ -23,7 +23,7 @@ What IS objective and lintable:
 Exit: 1 if any ERROR (or any WARN with --strict). 0 otherwise. 2 on usage error.
 
 Usage:
-    py xlsx_lint.py book.xlsx [--json report.json] [--strict] [--quiet]
+    python tools/check_excel.py book.xlsx [--json report.json] [--strict] [--quiet]
 """
 import argparse
 import json

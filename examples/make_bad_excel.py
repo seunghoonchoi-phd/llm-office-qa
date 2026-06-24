@@ -1,8 +1,8 @@
 """
-make_test_book.py — build a deliberately-flawed .xlsx to validate xlsx_lint.py.
+make_bad_excel.py — build a deliberately flawed .xlsx to validate tools/check_excel.py.
 
 Injects known OBJECTIVE defects (and clean controls that must NOT fire).
-Usage: py make_test_book.py [out.xlsx]   (default ./_test_flawed_book.xlsx)
+Usage: python examples/make_bad_excel.py [out.xlsx]   (default ./_test_flawed_book.xlsx)
 """
 import sys
 import os

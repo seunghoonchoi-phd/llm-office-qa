@@ -5,7 +5,7 @@ __pycache__/
 .venv/
 venv/
 
-# generated test fixtures (built on demand by examples/make_test_*.py)
+# generated test fixtures (built on demand by examples/make_bad_*.py)
 _test_flawed_deck.pptx
 _test_flawed_book.xlsx
 _test_flawed_doc.docx

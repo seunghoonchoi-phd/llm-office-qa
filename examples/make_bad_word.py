@@ -1,6 +1,6 @@
 """
-make_test_doc.py — build a deliberately-flawed .docx to validate docx_lint.py.
-Usage: py make_test_doc.py [out.docx]   (default ./_test_flawed_doc.docx)
+make_bad_word.py — build a deliberately flawed .docx to validate tools/check_word.py.
+Usage: python examples/make_bad_word.py [out.docx]   (default ./_test_flawed_doc.docx)
 """
 import sys
 import os

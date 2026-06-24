@@ -1,135 +1,194 @@
-# llm-office-qa
+# Office File Inspector
 
 [![tests](https://github.com/seunghoonchoi-phd/llm-office-qa/actions/workflows/test.yml/badge.svg)](https://github.com/seunghoonchoi-phd/llm-office-qa/actions/workflows/test.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![DOI](https://zenodo.org/badge/1271079447.svg)](https://zenodo.org/badge/latestdoi/1271079447)
 
-**Catch an LLM's _objective_ mistakes in PowerPoint, Excel, and Word — without lobotomizing the model.**
+**Check PowerPoint, Excel, and Word files for objective defects without lowering the ceiling of the AI-generated result.**
 
-Most "AI output checkers" quietly enforce *taste*: density limits, font-count caps, palette rules, margin grids. That is a mistake. The moment your QA layer polices style, it becomes a **shackle on a smarter model** — it punishes the very choices a more capable model makes to do better work.
+Office File Inspector catches the kind of problems that are wrong no matter what style you prefer:
 
-`llm-office-qa` does the opposite. It flags **only objective, unambiguous defects** — the kind of thing that is wrong regardless of taste, that a strictly *more* capable model would also never want to ship. Everything that is a matter of capability or judgment, it deliberately leaves alone.
+- PowerPoint text pushed off the slide
+- Excel `#REF!` / `#DIV/0!` errors
+- Word broken fields and ragged tables
+- leftover markdown or placeholders in delivered Office files
 
-> **The thesis:** Removing obvious mistakes is QA's job. Raising the ceiling is the model's job. A good checker never confuses the two.
+It deliberately avoids judging taste. It does not reject a deck because it has "too much text", "too many fonts", or an unusual layout. Those may be bad choices, or they may be the right choices for a dense technical document. A checker should remove obvious failures, not force every result into the same old template.
+
+> The rule: catch the floor-breaking mistakes, but do not cap the ceiling.
+
+The repository slug is still `llm-office-qa` for continuity, but the public product name is **Office File Inspector**.
 
 ---
 
-## The two tests every check must pass
+## Which file should I use?
 
-A rule earns its place here only if it passes **both**:
+Most users only need one command:
 
-1. **Objective** — a violation is wrong independent of style, context, or intent. (If it's arguable, it's out.)
-2. **No-shackle** — a *more capable* model would still always avoid it. (If a smarter model might break it *on purpose to do better*, it's out.)
+```bash
+python check_office_file.py report.pptx
+python check_office_file.py model.xlsx
+python check_office_file.py proposal.docx
+```
 
-Fail either test and the rule is dropped, or narrowed to the core that passes.
+If you want format-specific commands:
+
+```bash
+python tools/check_powerpoint.py report.pptx
+python tools/check_excel.py model.xlsx
+python tools/check_word.py proposal.docx
+```
+
+If you use an agent workflow and want automatic checks after generated Office files:
+
+```bash
+python integrations/auto_check_office_files.py
+```
+
+---
+
+## Project structure
+
+```text
+check_office_file.py                 # main command for users
+tools/
+  check_powerpoint.py                # .pptx checker
+  check_excel.py                     # .xlsx checker
+  check_word.py                      # .docx checker
+  render_powerpoint.py               # optional PPTX render helper
+integrations/
+  auto_check_office_files.py         # agent hook for automatic checks
+examples/
+  make_bad_powerpoint.py             # generate flawed test files
+  make_bad_excel.py
+  make_bad_word.py
+docs/
+  quality-philosophy.md              # design principle and taxonomy
+```
 
 ---
 
 ## What it catches
 
-Deterministic, file-only checks. No network, no model calls — it reads the file and measures.
+### PowerPoint
 
-### PowerPoint (`pptx_lint.py`)
 | ID | Severity | Catches |
 |---|---|---|
 | `GEO-OFFSLIDE` | ERROR | a shape pushed off the slide canvas |
-| `TXT-OVERFLOW` | WARN* | text taller than its own box (CJK-aware estimate) |
-| `GEO-OVERLAP` | WARN | two text boxes stacked so one hides the other |
-| `IMG-DISTORT` | WARN | an image stretched off its native aspect ratio |
-| `ART-MARKDOWN` | WARN | literal `**`, `#`, `- `, `\|` markdown left in the text |
-| `ART-PLACEHOLDER` | WARN | "click to add", empty placeholders, boilerplate |
-| `TXT-TINY` | WARN | explicit font below 8pt (unreadable, not a style floor) |
-| `TXT-INVISIBLE` | WARN | text-on-fill contrast below 2:1 (effectively invisible) |
+| `TXT-OVERFLOW` | WARN | text likely taller than its own box |
+| `GEO-OVERLAP` | WARN | text boxes stacked so one hides another |
+| `IMG-DISTORT` | WARN | image stretched off its native aspect ratio |
+| `ART-MARKDOWN` | WARN | literal markdown left in the text |
+| `ART-PLACEHOLDER` | WARN | placeholder or boilerplate text |
+| `TXT-TINY` | WARN | explicit font below 8pt |
+| `TXT-INVISIBLE` | WARN | text nearly invisible against its fill |
 
-### Excel (`xlsx_lint.py`)
+### Excel
+
 | ID | Severity | Catches |
 |---|---|---|
-| `XL-FORMULA-ERR` | ERROR | `#REF!`/`#DIV/0!`/error values, or `#REF!` baked into a formula |
-| `XL-MERGE-OVERLAP` | ERROR | merged ranges that overlap |
-| `XL-BORDER-GAP` | WARN | a data block whose border outline survives on *some cells only* |
-| `XL-NUM-AS-TEXT` | WARN | a number stored as text inside a numeric column (breaks math/sort) |
-| `XL-ARTIFACT` | WARN | literal markdown / leftover placeholder in a cell |
-| `XL-CLIP` | WARN | long text clipped by an occupied neighbor (wrap off) |
+| `XL-FORMULA-ERR` | ERROR | formula errors or `#REF!` baked into formulas |
+| `XL-MERGE-OVERLAP` | ERROR | overlapping merged ranges |
+| `XL-BORDER-GAP` | WARN | partial borders around a data block |
+| `XL-NUM-AS-TEXT` | WARN | numbers stored as text in numeric columns |
+| `XL-ARTIFACT` | WARN | literal markdown or placeholder text |
+| `XL-CLIP` | WARN | text likely clipped by an occupied neighbor |
 
-### Word (`docx_lint.py`)
+### Word
+
 | ID | Severity | Catches |
 |---|---|---|
-| `DOC-FIELD-ERR` | ERROR | broken field ("Error! Reference source not found"), mojibake (�) |
-| `DOC-TABLE-RAGGED` | ERROR | a table whose rows have different cell counts |
-| `DOC-MARKDOWN` | WARN | literal markdown left in the prose |
-| `DOC-PLACEHOLDER` | WARN | leftover placeholder / unresolved `{{token}}` / `${var}` |
-| `DOC-EMPTY-HEADING` | WARN | a heading-styled paragraph with no text |
-| `DOC-HEADING-SKIP` | WARN | an outline that jumps a level (H1 → H3) |
-| `DOC-EMPTY-TABLE` | WARN | a table whose cells are all empty |
-| `DOC-IMG-DISTORT` | WARN | an inline image stretched off its native ratio |
+| `DOC-FIELD-ERR` | ERROR | broken field references or mojibake |
+| `DOC-TABLE-RAGGED` | ERROR | rows in a table with different cell counts |
+| `DOC-MARKDOWN` | WARN | literal markdown left in prose |
+| `DOC-PLACEHOLDER` | WARN | unresolved placeholders or template tokens |
+| `DOC-EMPTY-HEADING` | WARN | heading-styled paragraph with no text |
+| `DOC-HEADING-SKIP` | WARN | outline jumps such as H1 to H3 |
+| `DOC-EMPTY-TABLE` | WARN | table whose cells are all empty |
+| `DOC-IMG-DISTORT` | WARN | inline image stretched off native ratio |
 
-\* `WARN` items marked *verify on render* are conservative heuristics. The renderer + your eyes are the ground truth for those.
+`WARN` means "verify this." It is not an automatic guilty verdict.
 
 ---
 
 ## What it refuses to flag
 
-These are **not** in the linter, on purpose:
+These are not hard failures in this project:
 
-> word/bullet density · font-family count · color palette · layout elegance · margins · alignment grids · aspect-ratio choice · prose quality · tone · length
+- word count or bullet count
+- font-family count
+- color palette taste
+- layout elegance
+- margin or alignment style
+- prose tone
+- information density
+- a creative aspect-ratio or layout choice
 
-These are not mistakes. They are **the model's ceiling**. A checker that polices them is shackling the next, better model. We don't.
-
----
-
-## The one root cause: open-loop generation
-
-The defects above look unrelated, but inside the machine they are **one mechanism**:
-
-> An LLM emits a spec (XML coordinates, a cell write) for something **it cannot see** (the rendered slide, the cell's real shape) — and instead of reading the current state, it fills in its own assumption and **never closes the loop**: it doesn't read ground truth before writing, and doesn't verify the result after.
-
-So the real discipline isn't a style rule. It's: **read the truth before you write, verify the result after.** A smarter model follows this *better*, not worse — which is exactly why it's no shackle. See [`PHILOSOPHY.md`](PHILOSOPHY.md) for the full taxonomy (A: blind geometry, B: ground-truth destruction, C: imposing your own formatting over the document's).
-
----
-
-## Three layers
-
-```
-① Prevent     follow the process discipline while generating   (don't err in the first place)
-② Deterministic   *_lint.py — measured straight from the file       (cheap, 100% precise)
-③ Judgment    render + look with your eyes                       (the final ground truth)
-```
+Some teams may need strict brand rules. That is valid, but it is a separate policy. This tool is for objective defects that a stronger model would also want to avoid.
 
 ---
 
 ## Quickstart
 
-```bash
-pip install -r requirements.txt   # python-pptx, openpyxl, python-docx, Pillow
-
-python pptx_lint.py deck.pptx              # exit 1 if any ERROR  (--strict: WARN too)
-python xlsx_lint.py book.xlsx --json r.json
-python docx_lint.py doc.docx
-
-# see it for yourself — render to PDF/PNG (needs LibreOffice)
-python pptx_render.py deck.pptx --png      # -> _render/ : PDF + slide-NN.png
-```
-
-Try it on the deliberately-flawed fixtures, which the generators build from scratch (no sample files needed):
+Install dependencies:
 
 ```bash
-python examples/make_test_deck.py flawed.pptx && python pptx_lint.py flawed.pptx
-python examples/make_test_book.py flawed.xlsx && python xlsx_lint.py flawed.xlsx
-python examples/make_test_doc.py  flawed.docx && python docx_lint.py flawed.docx
+pip install -r requirements.txt
 ```
 
-Each linter exits `1` on these — proof the deterministic checks fire on real defects.
+Check your files:
 
-## Auto-lint hook (optional)
+```bash
+python check_office_file.py deck.pptx
+python check_office_file.py book.xlsx --json report.json
+python check_office_file.py doc.docx --strict
+```
 
-`qa_hook.py` is a drop-in [Claude Code](https://docs.claude.com/en/docs/claude-code) `PostToolUse` hook. After any shell call, it finds freshly created `.pptx/.xlsx/.docx` files, lints them, and on an **objective ERROR** exits `2` — feeding the defect back to the model to fix *before it delivers*. WARN-only findings pass non-blocking. Wire it under `~/.claude/settings.json`.
+Generate deliberately flawed fixtures and confirm the checks fire:
 
-## Honest limits
+```bash
+python examples/make_bad_powerpoint.py flawed.pptx
+python examples/make_bad_excel.py flawed.xlsx
+python examples/make_bad_word.py flawed.docx
 
-- **PowerPoint:** inherited/theme font sizes and theme colors can't be read from the file — only explicit values are checked. Overflow/overlap are heuristics; the render is the truth.
-- **Excel:** "a color that breaks our house style" is **not** objectively detectable from the file alone (it needs your original as a baseline) — that's a process rule, not a lint. Formula errors need Excel's cached result; a freshly written file only has the `#REF!` string.
-- **Word:** reflows, so there's almost no "layout" to break — the real defects are generation artifacts and structure.
+python check_office_file.py flawed.pptx flawed.xlsx flawed.docx
+```
+
+Each flawed fixture should exit with code `1` because it contains objective defects.
+
+Optional render check for PowerPoint:
+
+```bash
+python tools/render_powerpoint.py deck.pptx --png
+```
+
+This requires LibreOffice. PNG export also uses PyMuPDF.
+
+---
+
+## Agent auto-check hook
+
+`integrations/auto_check_office_files.py` can be used as an agent `PostToolUse` hook. After a shell command creates or modifies `.pptx`, `.xlsx`, or `.docx` files, the hook checks recent files:
+
+- `ERROR` findings exit `2` so the agent can fix the file before delivery.
+- `WARN` findings are non-blocking and ask for review.
+
+```text
+python integrations/auto_check_office_files.py
+```
+
+---
+
+## Design principle
+
+The design note is in [`docs/quality-philosophy.md`](docs/quality-philosophy.md).
+
+Short version:
+
+1. A check must be objective.
+2. A stronger model should still want to avoid the defect.
+3. If a rule could block a better result, it should not be an error.
 
 ## Cite / License
 
-MIT. If it's useful in your work, please cite it — see [`CITATION.cff`](CITATION.cff).
+MIT. If this is useful in your work, please cite it using [`CITATION.cff`](CITATION.cff).

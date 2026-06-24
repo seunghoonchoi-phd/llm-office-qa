@@ -1,5 +1,5 @@
 """
-pptx_lint.py — OBJECTIVE-DEFECT linter for .pptx decks.
+check_powerpoint.py — objective-defect checker for .pptx decks.
 
 SCOPE PHILOSOPHY (read before adding a check):
   This linter only flags OBJECTIVE, UNAMBIGUOUS mistakes — defects that are wrong
@@ -15,12 +15,12 @@ SCOPE PHILOSOPHY (read before adding a check):
 
 Each finding: {id, severity, slide, shape, message}. Severity = ERROR | WARN | INFO.
 WARN items marked "(verify on render)" are conservative heuristics — the JUDGMENT
-layer (pptx_render.py + an eye) is the ground truth for those.
+layer (render_powerpoint.py + an eye) is the ground truth for those.
 
 Exit code: 1 if any ERROR (or any WARN when --strict). 0 otherwise. 2 on usage error.
 
 Usage:
-    py pptx_lint.py deck.pptx [--json report.json] [--strict] [--quiet]
+    python tools/check_powerpoint.py deck.pptx [--json report.json] [--strict] [--quiet]
 """
 import argparse
 import json

@@ -1,7 +1,7 @@
 """
-docx_lint.py — OBJECTIVE-DEFECT linter for .docx documents.
+check_word.py — objective-defect checker for .docx documents.
 
-Same scope philosophy as pptx_lint.py / xlsx_lint.py: flag ONLY objective,
+Same scope philosophy as Office File Inspector: flag ONLY objective,
 unambiguous mistakes a strictly MORE capable model would also never want.
 Two tests per check: (1) OBJECTIVE  (2) NO-SHACKLE.
 
@@ -28,7 +28,7 @@ Checks:
 Exit: 1 if any ERROR (or any WARN with --strict). 0 otherwise. 2 on usage error.
 
 Usage:
-    py docx_lint.py doc.docx [--json report.json] [--strict] [--quiet]
+    python tools/check_word.py doc.docx [--json report.json] [--strict] [--quiet]
 """
 import argparse
 import json

@@ -1,12 +1,12 @@
 """
-pptx_render.py — render a .pptx to a PDF (and optionally per-slide PNGs) so a
+render_powerpoint.py — render a .pptx to a PDF (and optionally per-slide PNGs) so a
 human / LLM reviewer can actually LOOK at the slides (the JUDGMENT layer).
 
 Why PDF: LibreOffice renders pptx -> pdf faithfully and the Claude Read tool can
 open PDF pages as images directly. PNG export is best-effort (needs PyMuPDF).
 
 Usage:
-    py pptx_render.py deck.pptx [--outdir DIR] [--png] [--dpi 150]
+    python tools/render_powerpoint.py deck.pptx [--outdir DIR] [--png] [--dpi 150]
 
 Prints the produced file paths, one per line, prefixed with their type.
 """

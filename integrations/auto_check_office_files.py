@@ -1,5 +1,5 @@
 """
-qa_hook.py — PostToolUse dispatcher: auto-lint freshly generated Office files.
+auto_check_office_files.py — PostToolUse dispatcher for freshly generated Office files.
 
 Wired as a PostToolUse hook on Bash/PowerShell. It reads the hook JSON on stdin,
 looks for .pptx/.xlsx/.docx paths in the command AND in the tool output (scripts
@@ -20,11 +20,16 @@ import sys
 import time
 
 TOOLDIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(TOOLDIR)
 # Use the interpreter running this hook; fall back to whatever python is on PATH.
 PYEXE = sys.executable or shutil.which("python") or shutil.which("py") or "python"
-LINTERS = {".pptx": "pptx_lint.py", ".xlsx": "xlsx_lint.py", ".docx": "docx_lint.py"}
+LINTERS = {
+    ".pptx": os.path.join(ROOT, "tools", "check_powerpoint.py"),
+    ".xlsx": os.path.join(ROOT, "tools", "check_excel.py"),
+    ".docx": os.path.join(ROOT, "tools", "check_word.py"),
+}
 RECENT_SEC = 180          # only lint files modified within this window
-SELF_SKIP = re.compile(r"_lint\.py|qa_hook|make_test_", re.I)
+SELF_SKIP = re.compile(r"check_(office_file|powerpoint|excel|word)|auto_check|make_bad_", re.I)
 PATH_RE = re.compile(r"""["']([^"']+\.(?:pptx|xlsx|docx))["']|(\S+\.(?:pptx|xlsx|docx))""", re.I)
 
 
@@ -87,7 +92,7 @@ def main():
         if not linter:
             continue
         try:
-            r = subprocess.run([PYEXE, os.path.join(TOOLDIR, linter), p],
+            r = subprocess.run([PYEXE, linter, p],
                                capture_output=True, text=True, timeout=90,
                                encoding="utf-8", errors="replace")
         except Exception:

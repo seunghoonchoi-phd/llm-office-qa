@@ -21,17 +21,29 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: pip install python-pptx openpyxl python-docx Pillow
+        run: pip install -r requirements.txt
 
       - name: Build deliberately-flawed fixtures
         run: |
-          python examples/make_test_deck.py flawed.pptx
-          python examples/make_test_book.py flawed.xlsx
-          python examples/make_test_doc.py  flawed.docx
+          python examples/make_bad_powerpoint.py flawed.pptx
+          python examples/make_bad_excel.py flawed.xlsx
+          python examples/make_bad_word.py  flawed.docx
 
-      - name: Each linter must flag the flawed fixture (exit 1)
+      - name: Main command must flag the flawed fixtures (exit 1)
         run: |
-          for cmd in "pptx_lint.py flawed.pptx" "xlsx_lint.py flawed.xlsx" "docx_lint.py flawed.docx"; do
+          set +e
+          python check_office_file.py flawed.pptx flawed.xlsx flawed.docx
+          code=$?
+          set -e
+          if [ "$code" -ne 1 ]; then
+            echo "::error::python check_office_file.py exited $code, expected 1 (objective defects)"
+            exit 1
+          fi
+          echo "OK: main command correctly exited 1"
+
+      - name: Format-specific commands must flag their flawed fixtures (exit 1)
+        run: |
+          for cmd in "tools/check_powerpoint.py flawed.pptx" "tools/check_excel.py flawed.xlsx" "tools/check_word.py flawed.docx"; do
             set +e
             python $cmd
             code=$?

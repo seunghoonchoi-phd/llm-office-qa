@@ -1,11 +1,11 @@
 """
-make_test_deck.py — build a deliberately-flawed .pptx to validate pptx_lint.py.
+make_bad_powerpoint.py — build a deliberately flawed .pptx to validate tools/check_powerpoint.py.
 
 Each slide injects KNOWN defects so the linter's deterministic checks can be
 confirmed to fire (true positives) without firing on the clean control slide.
 
 Usage:
-    py make_test_deck.py [out.pptx]
+    python examples/make_bad_powerpoint.py [out.pptx]
 Default output: ./_test_flawed_deck.pptx (plus a generated sample image).
 """
 import sys
